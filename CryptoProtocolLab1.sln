@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31229.75
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoProtocolLab1", "CryptoProtocolLab1\CryptoProtocolLab1.csproj", "{F423C5FA-DC0E-4DB3-9120-FBEFAEEF9DAD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoProtocolLab1HMAC", "CryptoProtocolLab1HMAC\CryptoProtocolLab1HMAC.csproj", "{F423C5FA-DC0E-4DB3-9120-FBEFAEEF9DAD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoProtocolLab1CMAC", "CryptoProtocolLab1CMAC\CryptoProtocolLab1CMAC.csproj", "{DB7D4948-28F4-44F6-A3D1-5B7BF652C6F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{F423C5FA-DC0E-4DB3-9120-FBEFAEEF9DAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F423C5FA-DC0E-4DB3-9120-FBEFAEEF9DAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F423C5FA-DC0E-4DB3-9120-FBEFAEEF9DAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB7D4948-28F4-44F6-A3D1-5B7BF652C6F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB7D4948-28F4-44F6-A3D1-5B7BF652C6F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB7D4948-28F4-44F6-A3D1-5B7BF652C6F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB7D4948-28F4-44F6-A3D1-5B7BF652C6F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
