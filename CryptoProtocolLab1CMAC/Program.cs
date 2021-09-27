@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 
 namespace CryptoProtocolLab1CMAC
@@ -9,23 +10,47 @@ namespace CryptoProtocolLab1CMAC
     {
         static byte[] zero = new byte[16];
         private static byte[] rb = new byte[16];
+        
+        static void PrintByteArr(byte[] arr)
+        {
+            string hex = BitConverter.ToString(arr);
+            Console.WriteLine(hex);
+        }
+        
+        public static byte[] StringToByteArray(string hex) {
+            return Enumerable.Range(0, hex.Length)
+                .Where(x => x % 2 == 0)
+                .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                .ToArray();
+        }
+
 
         static void Main(string[] args)
         {
             rb[0] = 0x87;
+
+            var input = StringToByteArray("2b7e151628aed2a6abf7158809cf4f3c");
             
-            
-            Console.WriteLine("Hello World!");
+            PrintByteArr(input);
+
+            byte[] k1;
+            byte[] k2;
+
+            GenerateSubkey(input, out k1, out k2 );
+
+            //Console.WriteLine("Hello World!");
         }
 
-        public void GenerateSubkey(byte[] k, out byte[] k1, out byte[] k2)
+        public static void GenerateSubkey(byte[] k, out byte[] k1, out byte[] k2)
         {
             var aes = Aes.Create();
             byte[] L;
             k1 = new byte[16];
             k2 = new byte[16];
+            var IV = new byte[16];
 
             aes.Key = k;
+            aes.IV = IV;
             
             var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
             
@@ -41,6 +66,8 @@ namespace CryptoProtocolLab1CMAC
                     L = msEncrypt.ToArray();
                 }
             }
+            
+            PrintByteArr(L);
             
             //bit shift over whole key
             var temp = new BitArray(L);
@@ -73,6 +100,9 @@ namespace CryptoProtocolLab1CMAC
                     k2[i] ^= rb[i];
                 }
             }
+            
+            PrintByteArr(k1);
+            PrintByteArr(k2);
         }
     }
 }
