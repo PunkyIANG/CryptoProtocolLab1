@@ -9,7 +9,74 @@ namespace CryptoProtocolLab1CMAC
     class Program
     {
         static byte[] zero = new byte[16];
-        private static byte[] rb = new byte[16];
+        private static byte rb = 0x87;
+        
+
+
+        static void Main(string[] args)
+        {
+            var input = StringToByteArray("2b7e151628aed2a6abf7158809cf4f3c");
+            
+            PrintByteArr(input);
+
+            byte[] k1;
+            byte[] k2;
+
+            GenerateSubkey(input, out k1, out k2 );
+            
+        }
+
+        public static void GenerateSubkey(byte[] key, out byte[] k1, out byte[] k2)
+        {
+            byte[] L;
+            
+            using (MemoryStream ms = new MemoryStream())
+            {
+                AesCryptoServiceProvider aes = new AesCryptoServiceProvider();
+
+                aes.Mode = CipherMode.CBC;
+                aes.Padding = PaddingMode.None;
+
+                using (CryptoStream cs = new CryptoStream(ms, aes.CreateEncryptor(key, zero), CryptoStreamMode.Write))
+                {
+                    cs.Write(zero, 0, zero.Length);
+                    cs.FlushFinalBlock();
+
+                    L = ms.ToArray();
+                }
+            }
+
+            PrintByteArr(L);
+            
+            //bit shift over whole key
+            k1 = Rol(L);
+            
+            //if most significant bit is zero
+            if ((L[0] & 0x80) == 0x80)
+                k1[15] ^= rb;
+            
+            //bit shift over whole key
+            k2 = Rol(k1);
+            
+            //if most significant bit is zero
+            if ((k1[0] & 0x80) == 0x80)
+                k2[15] ^= rb;
+        }
+        
+        public static byte[] Rol(byte[] b)
+        {
+            byte[] r = new byte[b.Length];
+            byte carry = 0;
+
+            for (int i = b.Length - 1; i >= 0; i--)
+            {
+                ushort u = (ushort)(b[i] << 1);
+                r[i] = (byte)((u & 0xff) + carry);
+                carry = (byte)((u & 0xff00) >> 8);
+            }
+
+            return r;
+        }
         
         static void PrintByteArr(byte[] arr)
         {
@@ -22,87 +89,6 @@ namespace CryptoProtocolLab1CMAC
                 .Where(x => x % 2 == 0)
                 .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
                 .ToArray();
-        }
-
-
-        static void Main(string[] args)
-        {
-            rb[0] = 0x87;
-
-            var input = StringToByteArray("2b7e151628aed2a6abf7158809cf4f3c");
-            
-            PrintByteArr(input);
-
-            byte[] k1;
-            byte[] k2;
-
-            GenerateSubkey(input, out k1, out k2 );
-
-            //Console.WriteLine("Hello World!");
-        }
-
-        public static void GenerateSubkey(byte[] k, out byte[] k1, out byte[] k2)
-        {
-            var aes = Aes.Create();
-            byte[] L;
-            k1 = new byte[16];
-            k2 = new byte[16];
-            var IV = new byte[16];
-
-            aes.Key = k;
-            aes.IV = IV;
-            
-            var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-            
-            using (MemoryStream msEncrypt = new MemoryStream())
-            {
-                using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-                {
-                    using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
-                    {
-                        //Write all data to the stream.
-                        swEncrypt.Write(zero);
-                    }
-                    L = msEncrypt.ToArray();
-                }
-            }
-            
-            PrintByteArr(L);
-            
-            //bit shift over whole key
-            var temp = new BitArray(L);
-            for (int i = 0; i < temp.Length - 1; i++)
-                temp[i] = temp[i + 1];
-            
-            temp.CopyTo(k1, 0);
-
-            //if most significant bit is zero
-            if ((L[^1] & 128) == 0)
-            {
-                for (int i = 0; i < k1.Length; i++)
-                {
-                    k1[i] ^= rb[i];
-                }
-            }
-            
-            //bit shift over whole key
-            var temp2 = new BitArray(k1);
-            for (int i = 0; i < temp2.Length - 1; i++)
-                temp2[i] = temp2[i + 1];
-            
-            temp2.CopyTo(k2, 0);
-
-            //if most significant bit is zero
-            if ((L[^1] & 128) == 0)
-            {
-                for (int i = 0; i < k2.Length; i++)
-                {
-                    k2[i] ^= rb[i];
-                }
-            }
-            
-            PrintByteArr(k1);
-            PrintByteArr(k2);
         }
     }
 }
