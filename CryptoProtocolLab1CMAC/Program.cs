@@ -17,6 +17,7 @@ namespace CryptoProtocolLab1CMAC
         static void Main(string[] args)
         {
             var key = StringToByteArray("2b7e151628aed2a6abf7158809cf4f3c");
+            var msg = StringToByteArray("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");
 
             PrintByteArr(key);
 
@@ -27,17 +28,16 @@ namespace CryptoProtocolLab1CMAC
             PrintByteArr(k1);
             PrintByteArr(k2);
             
-            PrintByteArr(AesCmac(key, new byte[0]));
+            PrintByteArr(AesCmac(key, msg));
         }
 
         public static byte[] AesCmac(byte[] key, byte[] msg)
         {
-            byte[] k1, k2;
             bool flag;
 
-            GenerateSubkey(key, out k1, out k2);
+            GenerateSubkey(key, out var k1, out var k2);
 
-            var n = (int) Math.Ceiling((float) msg.Length / bsize);
+            var n = (msg.Length + 15) / bsize;
 
             if (n == 0)
             {
@@ -46,6 +46,8 @@ namespace CryptoProtocolLab1CMAC
             }
             else
                 flag = msg.Length % bsize == 0;
+            
+            PrintByteArr(msg);
 
             if (flag)
             {
@@ -58,32 +60,37 @@ namespace CryptoProtocolLab1CMAC
                 padding[0] = 0x80;
 
                 msg = msg.Concat(padding).ToArray();
+                
+                PrintByteArr(msg);
 
                 for (int i = 0; i < bsize; i++)
                     msg[msg.Length - bsize + i] ^= k2[i];
             }
             
+            PrintByteArr(msg);
+
+
             var x = zero;
             var y = zero;
 
-            for (int i = 0; i < n-1; i++)
+            for (int i = 0; i < n - 1; i++)
             {
                 for (int j = 0; j < bsize; j++)
                     y[j] = (byte)(x[j] ^ msg[i * bsize + j]);
                 
-                x = AesEncrypt(key, y);
+                x = AESEncrypt(key, y);
             }
             
             for (int j = 0; j < bsize; j++)
                 y[j] = (byte)(x[j] ^ msg[msg.Length - bsize + j]);
 
-            return AesEncrypt(key, y);
+            return AESEncrypt(key, y);
         }
 
 
         public static void GenerateSubkey(byte[] key, out byte[] k1, out byte[] k2)
         {
-            var L = AesEncrypt(key, zero);
+            var L = AESEncrypt(key, zero);
             
             // PrintByteArr(L);
 
@@ -117,7 +124,7 @@ namespace CryptoProtocolLab1CMAC
             return r;
         }
 
-        public static byte[] AesEncrypt(byte[] key, byte[] data)
+        public static byte[] AESEncrypt(byte[] key, byte[] data)
         {
             var ms = new MemoryStream();
             var aes = new AesCryptoServiceProvider();
