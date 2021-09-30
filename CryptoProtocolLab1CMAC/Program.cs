@@ -15,34 +15,39 @@ namespace CryptoProtocolLab1CMAC
         
         static void Main(string[] args)
         {
-            if (args.Length == 0)
+            switch (args.Length)
             {
-                var key = StringToByteArray("2b7e151628aed2a6abf7158809cf4f3c");
-                var msg = StringToByteArray("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");
+                case 0:
+                {
+                    var key = StringToByteArray("2b7e151628aed2a6abf7158809cf4f3c");
+                    var msg = StringToByteArray("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");
 
                 
-                Console.WriteLine("cmac 'key' 'text'");
-                Console.WriteLine("Example: ");
-                Console.WriteLine("Key: 2b7e151628aed2a6abf7158809cf4f3c");
-                Console.WriteLine("Text: 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");
+                    Console.WriteLine("cmac 'key' 'text'");
+                    Console.WriteLine("This program uses AES as its encryption algorithm");
+                    Console.WriteLine("Example: ");
+                    Console.WriteLine("Key: 2b7e151628aed2a6abf7158809cf4f3c");
+                    Console.WriteLine("Text: 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");
                 
-                Console.Write("CMAC value:     ");
-                PrintByteArr(AesCmac(key, msg));
+                    Console.Write("CMAC value:     ");
+                    PrintByteArr(AesCmac(key, msg));
 
-                Console.WriteLine("Standard value: DF-A6-67-47-DE-9A-E6-30-30-CA-32-61-14-97-C8-27");
-                Console.WriteLine("Reference: https://datatracker.ietf.org/doc/html/rfc4493#section-4");
-            }
-            else if (args.Length == 1)
-            {
-                Console.WriteLine("This program requires 2 parameters to run");
-            }
-            else
-            {
-                byte[] k    = StringToByteArray(args[0]);
-                byte[] text = StringToByteArray(args[1]);
+                    Console.WriteLine("Standard value: DF-A6-67-47-DE-9A-E6-30-30-CA-32-61-14-97-C8-27");
+                    Console.WriteLine("Reference: https://datatracker.ietf.org/doc/html/rfc4493#section-4");
+                    break;
+                }
+                case 1:
+                    Console.WriteLine("This program requires 2 parameters to run");
+                    break;
+                default:
+                {
+                    byte[] k    = StringToByteArray(args[0]);
+                    byte[] text = StringToByteArray(args[1]);
                 
-                Console.Write("СMAC value:     ");
-                PrintByteArr(AesCmac(k, text));
+                    Console.Write("СMAC value:     ");
+                    PrintByteArr(AesCmac(k, text));
+                    break;
+                }
             }
         }
 

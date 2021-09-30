@@ -19,39 +19,44 @@ namespace CryptoProtocolLab1HMAC
 
         static void Main(string[] args)
         {
-            if (args.Length == 0)
+            switch (args.Length)
             {
-                byte[] k    = Encoding.ASCII.GetBytes("key");
-                byte[] text = Encoding.ASCII.GetBytes("The quick brown fox jumps over the lazy dog");
+                case 0:
+                {
+                    byte[] k    = Encoding.ASCII.GetBytes("key");
+                    byte[] text = Encoding.ASCII.GetBytes("The quick brown fox jumps over the lazy dog");
 
-                HMACSHA256 hmac = new HMACSHA256(k);
+                    HMACSHA256 hmac = new HMACSHA256(k);
                 
-                Console.WriteLine("hmac 'key' 'text'");
-                Console.WriteLine("Example: ");
-                Console.WriteLine("Key: key");
-                Console.WriteLine("Text: The quick brown fox jumps over the lazy dog");
-                Console.Write("HMAC value:     ");
-                PrintByteArr(HMACStuff(k, text));
+                    Console.WriteLine("hmac 'key' 'text'");
+                    Console.WriteLine("This program uses SHA-256 as its hashing algorithm");
+                    Console.WriteLine("Example: ");
+                    Console.WriteLine("Key: key");
+                    Console.WriteLine("Text: The quick brown fox jumps over the lazy dog");
+                    Console.Write("HMAC value:     ");
+                    PrintByteArr(HMACStuff(k, text));
 
-                Console.Write("Standard value: ");
-                PrintByteArr(hmac.ComputeHash(text));
-            }
-            else if (args.Length == 1)
-            {
-                Console.WriteLine("This program requires 2 parameters to run");
-            }
-            else
-            {
-                byte[] k    = Encoding.ASCII.GetBytes(args[0]);
-                byte[] text = Encoding.ASCII.GetBytes(args[1]);
+                    Console.Write("Standard value: ");
+                    PrintByteArr(hmac.ComputeHash(text));
+                    break;
+                }
+                case 1:
+                    Console.WriteLine("This program requires 2 parameters to run");
+                    break;
+                default:
+                {
+                    byte[] k    = Encoding.ASCII.GetBytes(args[0]);
+                    byte[] text = Encoding.ASCII.GetBytes(args[1]);
 
-                HMACSHA256 hmac = new HMACSHA256(k);
+                    HMACSHA256 hmac = new HMACSHA256(k);
 
-                Console.Write("HMAC value:     ");
-                PrintByteArr(HMACStuff(k, text));
+                    Console.Write("HMAC value:     ");
+                    PrintByteArr(HMACStuff(k, text));
 
-                Console.Write("Standard value: ");
-                PrintByteArr(hmac.ComputeHash(text));
+                    Console.Write("Standard value: ");
+                    PrintByteArr(hmac.ComputeHash(text));
+                    break;
+                }
             }
         }
 
