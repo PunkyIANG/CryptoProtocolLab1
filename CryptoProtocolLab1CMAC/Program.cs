@@ -15,27 +15,45 @@ namespace CryptoProtocolLab1CMAC
         
         static void Main(string[] args)
         {
-            var key = StringToByteArray("2b7e151628aed2a6abf7158809cf4f3c");
-            var msg = StringToByteArray("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");
-            // var msg = StringToByteArray("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411e5fbc1191a0a52eff69f2445df4f9b17ad2b417be66c3710");
-            
-            // Console.Write("Key: ");
-            // PrintByteArr(key);
+            if (args.Length == 0)
+            {
+                var key = StringToByteArray("2b7e151628aed2a6abf7158809cf4f3c");
+                var msg = StringToByteArray("6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");
 
-            PrintByteArr(AesCmac(key, msg));
+                
+                Console.WriteLine("cmac 'key' 'text'");
+                Console.WriteLine("Example: ");
+                Console.WriteLine("Key: 2b7e151628aed2a6abf7158809cf4f3c");
+                Console.WriteLine("Text: 6bc1bee22e409f96e93d7e117393172aae2d8a571e03ac9c9eb76fac45af8e5130c81c46a35ce411");
+                
+                Console.Write("CMAC value:     ");
+                PrintByteArr(AesCmac(key, msg));
+
+                Console.WriteLine("Standard value: DF-A6-67-47-DE-9A-E6-30-30-CA-32-61-14-97-C8-27");
+                Console.WriteLine("Reference: https://datatracker.ietf.org/doc/html/rfc4493#section-4");
+            }
+            else if (args.Length == 1)
+            {
+                Console.WriteLine("This program requires 2 parameters to run");
+            }
+            else
+            {
+                byte[] k    = StringToByteArray(args[0]);
+                byte[] text = StringToByteArray(args[1]);
+                
+                Console.Write("СMAC value:     ");
+                PrintByteArr(AesCmac(k, text));
+            }
         }
 
-        public static byte[] AesCmac(byte[] key, byte[] msg)
+        static byte[] AesCmac(byte[] key, byte[] msg)
         {
             bool flag;
 
-            GenerateSubkey(key, out var k1, out var k2);
-
-            Console.Write("K1:  ");
-            PrintByteArr(k1);
-            Console.Write("K2:  ");
-            PrintByteArr(k2);
-
+            var encryptor = GetAlgorithm(key);
+            
+            GenerateSubkey(key, out var k1, out var k2, encryptor);
+            
             var n = (msg.Length + 15) / bsize;
 
             if (n == 0)
@@ -45,18 +63,11 @@ namespace CryptoProtocolLab1CMAC
             }
             else
                 flag = msg.Length % bsize == 0;
-            
-            Console.WriteLine("N: " + n);
-            
-            Console.Write("MSG: ");
-            PrintByteArr(msg);
 
             if (flag)
-            {
                 for (int i = 0; i < bsize; i++)
                     msg[msg.Length - bsize + i] ^= k1[i];
-                Console.WriteLine();
-            }
+            
             else
             {
                 var padding = new byte[16 - msg.Length % 16];
@@ -64,16 +75,9 @@ namespace CryptoProtocolLab1CMAC
 
                 msg = msg.Concat(padding).ToArray();
                 
-                Console.Write("MSG2:");
-                PrintByteArr(msg);
-
                 for (int i = 0; i < bsize; i++)
                     msg[msg.Length - bsize + i] ^= k2[i];
             }
-            
-            Console.Write("MSG3:");
-            PrintByteArr(msg);
-
 
             var x = zero;
             var y = zero;
@@ -83,35 +87,20 @@ namespace CryptoProtocolLab1CMAC
                 for (int j = 0; j < bsize; j++)
                     y[j] = (byte)(x[j] ^ msg[i * bsize + j]);
                 
-                Console.Write("Y" + i + ":  ");
-                PrintByteArr(y);
-                
-                x = AESEncrypt(key, y);
-                
-                Console.Write("X" + i + ":  ");
-                PrintByteArr(x);
-                Console.WriteLine();
+                x = SimpleEncryptV2(encryptor, y);
             }
             
             for (int j = 0; j < bsize; j++)
                 y[j] = (byte)(x[j] ^ msg[msg.Length - bsize + j]);
             
-            Console.Write("Yl:  ");
-            PrintByteArr(y);
-
-            Console.WriteLine();
-            return AESEncrypt(key, y);
+            return SimpleEncryptV2(encryptor, y);
         }
 
 
-        public static void GenerateSubkey(byte[] key, out byte[] k1, out byte[] k2)
+        static void GenerateSubkey(byte[] key, out byte[] k1, out byte[] k2, ICryptoTransform encryptor)
         {
-            //var L = Encrypt(key, zero);
-            var L = AESEncrypt(key, zero);
+            var L = SimpleEncryptV2(encryptor, zero);
             
-            Console.Write("L:  ");
-            PrintByteArr(L);
-
             //bit shift over whole key
             k1 = Rol(L);
 
@@ -125,14 +114,9 @@ namespace CryptoProtocolLab1CMAC
             //if most significant bit is zero
             if ((k1[0] & 0x80) == 0x80)
                 k2[15] ^= rb;
-            
-            Console.Write("K1: ");
-            PrintByteArr(k1);
-            Console.Write("K2: ");
-            PrintByteArr(k2);
         }
 
-        public static byte[] Rol(byte[] b)
+        static byte[] Rol(byte[] b)
         {
             byte[] r = new byte[b.Length];
             byte carry = 0;
@@ -146,108 +130,30 @@ namespace CryptoProtocolLab1CMAC
 
             return r;
         }
-
-        /*
-        static byte[] Encrypt(byte[] key, byte[] data) {
-            byte[] encrypted;  
-            // Create a new AesManaged.    
-            using(AesManaged aes = new AesManaged()) {  
-                // Create encryptor    
-                ICryptoTransform encryptor = aes.CreateEncryptor(key, zero);  
-                // Create MemoryStream    
-                using(MemoryStream ms = new MemoryStream()) {  
-                    // Create crypto stream using the CryptoStream class. This class is the key to encryption    
-                    // and encrypts and decrypts data from any given stream. In this case, we will pass a memory stream    
-                    // to encrypt    
-                    using(CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write)) {  
-                        // Create StreamWriter and write data to a stream    
-                        cs.Write(data, 0, data.Length);
-                        encrypted = ms.ToArray();  
-                    }  
-                }  
-            }  
-            
-            PrintByteArr(key);
-            PrintByteArr(data);
-            PrintByteArr(encrypted);
-            Console.WriteLine();
-            // Return encrypted data    
-            return encrypted;  
-        }
-        */
-
-        private static byte[] EncryptV2(byte[] data, byte[] key)
+        
+        static ICryptoTransform GetAlgorithm(byte[] key)
         {
-            using (SymmetricAlgorithm crypt = Aes.Create())
-            using (MemoryStream memoryStream = new MemoryStream())
+            return new AesManaged
             {
-                crypt.Key = key;
-                crypt.IV = zero;
-                crypt.Mode = CipherMode.CBC;
-                crypt.BlockSize = 128;
+                Mode = CipherMode.CBC, 
+                Padding = PaddingMode.Zeros, 
+                Key = key, 
+                IV = zero
+            }.CreateEncryptor();
+        }
 
-                using (CryptoStream cryptoStream = new CryptoStream(
-                    memoryStream, crypt.CreateEncryptor(key, zero), CryptoStreamMode.Write))
-                {
-                    cryptoStream.Write(data, 0, data.Length);
-                }
-
-                return memoryStream.ToArray();
-            }
+        static byte[] SimpleEncryptV2(ICryptoTransform encryptor, byte[] bytes)
+        {
+            return encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
         }
         
-        static byte[] Encrypt(string plainText, byte[] Key) {  
-            byte[] encrypted;  
-            // Create a new AesManaged.    
-            using(AesManaged aes = new AesManaged()) {  
-                // Create encryptor    
-                ICryptoTransform encryptor = aes.CreateEncryptor(Key, zero);  
-                // Create MemoryStream    
-                using(MemoryStream ms = new MemoryStream()) {  
-                    // Create crypto stream using the CryptoStream class. This class is the key to encryption    
-                    // and encrypts and decrypts data from any given stream. In this case, we will pass a memory stream    
-                    // to encrypt    
-                    using(CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write)) {  
-                        // Create StreamWriter and write data to a stream    
-                        using(StreamWriter sw = new StreamWriter(cs))  
-                            sw.Write(plainText);  
-                        encrypted = ms.ToArray();  
-                    }  
-                }  
-            }  
-            // Return encrypted data    
-            return encrypted;  
-        }  
-        
-        static byte[] AESEncrypt(byte[] key, byte[] data)
-        {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                AesCryptoServiceProvider aes = new AesCryptoServiceProvider();
-
-                aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.None;
-
-                using (CryptoStream cs = new CryptoStream(ms, aes.CreateEncryptor(key, zero), CryptoStreamMode.Write))
-                {
-                    cs.Write(data, 0, data.Length);
-                    cs.FlushFinalBlock();
-
-                    return ms.ToArray();
-                }
-            }
-        }
-
-
-
-
         static void PrintByteArr(byte[] arr)
         {
             string hex = BitConverter.ToString(arr);
             Console.WriteLine(hex);
         }
 
-        public static byte[] StringToByteArray(string hex)
+        static byte[] StringToByteArray(string hex)
         {
             return Enumerable.Range(0, hex.Length)
                 .Where(x => x % 2 == 0)
