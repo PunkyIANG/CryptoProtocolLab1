@@ -34,6 +34,9 @@ namespace CryptoProtocolLab1CMAC
 
                     Console.WriteLine("Standard value: DF-A6-67-47-DE-9A-E6-30-30-CA-32-61-14-97-C8-27");
                     Console.WriteLine("Reference: https://datatracker.ietf.org/doc/html/rfc4493#section-4");
+                    
+                    var temp = Console.ReadKey();
+
                     break;
                 }
                 case 1:

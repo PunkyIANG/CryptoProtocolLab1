@@ -38,6 +38,9 @@ namespace CryptoProtocolLab1HMAC
 
                     Console.Write("Standard value: ");
                     PrintByteArr(hmac.ComputeHash(text));
+
+                    var temp = Console.ReadKey();
+
                     break;
                 }
                 case 1:
